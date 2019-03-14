@@ -46,6 +46,7 @@ func (p ServiceHandler) logout(req *restful.Request, resp *restful.Response) {
 
 func (p ServiceHandler) apiKeyFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 	keyName := "Authorization"
+	glog.Infof("auth %s", req.Request.Header.Get(keyName))
 	bearerAndToken := strings.Split(req.Request.Header.Get(keyName), " ")
 	if len(bearerAndToken) == 2 {
 		if bearerAndToken[1] == p.APIKey {

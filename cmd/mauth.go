@@ -5,8 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/codemk8/mauth/pkg/auth"
+	"github.com/golang/glog"
 )
 
 var (
@@ -16,7 +18,11 @@ var (
 
 func main() {
 	flag.Parse()
-	sh := auth.NewServiceHandler(*apiKey)
+	apiKey := os.Getenv("MAUTH_API_KEY")
+	if apiKey == "" {
+		glog.Fatal("MAUTH_API_KEY not found.")
+	}
+	sh := auth.NewServiceHandler(apiKey)
 	httpHandler := sh.Register("")
 	http.Handle("/", httpHandler)
 
