@@ -10,12 +10,13 @@ import (
 )
 
 var (
-	port = flag.Int("port", 55555, "The webhook server port")
+	port   = flag.Int("port", 55555, "The webhook server port")
+	apiKey = flag.String("apikey", "", "The API key for authentication")
 )
 
 func main() {
 	flag.Parse()
-	sh := auth.ServiceHandler{}
+	sh := auth.NewServiceHandler(*apiKey)
 	httpHandler := sh.Register("")
 	http.Handle("/", httpHandler)
 
