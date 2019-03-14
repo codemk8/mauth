@@ -16,7 +16,8 @@ var (
 func main() {
 	flag.Parse()
 	sh := auth.ServiceHandler{}
-	sh.Register("")
+	httpHandler := sh.Register("")
+	http.Handle("/", httpHandler)
 
 	http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
 }
