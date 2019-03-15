@@ -1,6 +1,9 @@
 ## mauth
 
-Authentication microservice written in go
+Authentication microservice written in go with different backends for storing user info:
+
+* AWS database 
+* Local database
 
 ## API Endpoints
 
@@ -13,7 +16,7 @@ Authentication microservice written in go
 
 ```bash
 export MAUTH_API_KEY="YOUR_API_KEY_HERE" 
-./bin/mauth --alsologtostderr 
+./bin/mauth --alsologtostderr
 ```
 
 

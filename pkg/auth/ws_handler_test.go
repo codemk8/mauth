@@ -54,15 +54,52 @@ func TestAPI(t *testing.T) {
 	defer ts.Close()
 	res, err := genReq(APIKey).Post(ts.URL + APIVersion + RegisterPath)
 	assert.Equal(t, nil, err)
-	assert.Equal(t, http.StatusOK, res.StatusCode())
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode())
 }
 
-func TestWrongAPIKey(t *testing.T) {
-	// A simple create model test case
+func TestHTTPServer_Register(t *testing.T) {
+	type args struct {
+		urlRoot string
+	}
+	tests := []struct {
+		name   string
+		apiKey string
+		regReq interface{}
+		want   int
+	}{
+		{
+			name:   "Status OK",
+			apiKey: APIKey,
+			regReq: RegisterRequest{
+				Username: "user1",
+				Password: "password",
+			},
+			want: http.StatusOK,
+		},
+		{
+			name:   "Correct API key but wrong input",
+			apiKey: APIKey,
+			regReq: AuthorizeRequest{
+				Token: "token",
+			},
+			want: http.StatusBadRequest,
+		},
+		{
+			name:   "wrongAPIKey",
+			apiKey: "wasdfasfas",
+			regReq: RegisterRequest{
+				Username: "user1",
+				Password: "password",
+			},
+			want: http.StatusUnauthorized,
+		},
+	}
 	ts := createModelHandler()
 	defer ts.Close()
-	wrongAPIKey := "wrong"
-	res, err := genReq(wrongAPIKey).Post(ts.URL + APIVersion + RegisterPath)
-	assert.Equal(t, nil, err)
-	assert.Equal(t, http.StatusUnauthorized, res.StatusCode())
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			res, _ := genReq(tt.apiKey).SetBody(tt.regReq).Post(ts.URL + APIVersion + RegisterPath)
+			assert.Equal(t, tt.want, res.StatusCode())
+		})
+	}
 }

@@ -29,7 +29,21 @@ func NewServiceHandler(apiKey string) *ServiceHandler {
 }
 
 func (p ServiceHandler) register(req *restful.Request, resp *restful.Response) {
+	registerRequest := &RegisterRequest{}
+	// err := json.NewDecoder(req.Request.Body).Decode(&registerRequest)
+	err := req.ReadEntity(registerRequest)
+	if err != nil {
+		glog.Warningf("Get register request error: %v", err)
+		resp.WriteErrorString(http.StatusBadRequest, "Wrong JSON input for reigster.")
+		return
+	}
+	if registerRequest.Username == "" || registerRequest.Password == "" {
+		glog.Warningf("Empty username or password")
+		resp.WriteErrorString(http.StatusBadRequest, "Invalid username or password")
+		return
+	}
 	glog.Infof("here in register")
+	resp.WriteHeader(http.StatusOK)
 }
 
 func (p ServiceHandler) login(req *restful.Request, resp *restful.Response) {
