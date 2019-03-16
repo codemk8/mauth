@@ -19,12 +19,18 @@ const (
 
 // ServiceHandler implements the auth restful APIs
 type ServiceHandler struct {
-	APIKey string
+	StandAlone bool
+	APIKey     string
 }
 
-func NewServiceHandler(apiKey string) *ServiceHandler {
+// NewServiceHandler creates the http handler for auth service
+// There are two modes: standalone or integrated modes.
+// Standalone: Run mauth as a standalone HTTP microservice
+// Integrated: Integrate mauth into existing services
+func NewServiceHandler(apiKey string, standAlone bool) *ServiceHandler {
 	return &ServiceHandler{
-		APIKey: apiKey,
+		StandAlone: standAlone,
+		APIKey:     apiKey,
 	}
 }
 
@@ -46,8 +52,20 @@ func (p ServiceHandler) register(req *restful.Request, resp *restful.Response) {
 	resp.WriteHeader(http.StatusOK)
 }
 
-func (p ServiceHandler) login(req *restful.Request, resp *restful.Response) {
-	glog.Infof("here in login")
+func (p ServiceHandler) loginPost(req *restful.Request, resp *restful.Response) {
+	loginRequest := &LoginRequest{}
+	err := req.ReadEntity(loginRequest)
+	if err != nil {
+		glog.Warningf("Login post request error: %v", err)
+		resp.WriteErrorString(http.StatusBadRequest, "Wrong JSON input for login.")
+		return
+	}
+	glog.Infof("here in login post")
+	resp.WriteHeader(http.StatusOK)
+}
+
+func (p ServiceHandler) loginGet(req *restful.Request, resp *restful.Response) {
+	glog.Infof("here in login get")
 }
 
 func (p ServiceHandler) auth(req *restful.Request, resp *restful.Response) {
@@ -76,14 +94,26 @@ func (p ServiceHandler) apiKeyFilter(req *restful.Request, resp *restful.Respons
 func (p ServiceHandler) Register(urlRoot string) http.Handler {
 	wsContainer := restful.NewContainer()
 	wsContainer.EnableContentEncoding(true)
-	wsContainer.Filter(p.apiKeyFilter)
+	// When running in standalone mode, we use api key to ensure
+	// requester is one of us
+	if p.StandAlone {
+		wsContainer.Filter(p.apiKeyFilter)
+	}
+
 	ws := new(restful.WebService)
 	ws.Consumes("*/*"). // Set media acceptance to wildcast
 				Produces(restful.MIME_JSON)
 	ws.Route(ws.POST(urlRoot + APIVersion + RegisterPath).To(p.register))
-	ws.Route(ws.GET(urlRoot + APIVersion + LoginPath).To(p.login))
+	// Different method in different mode:
+	// standalone: the username and password usually comes as POST JSON
+	// integrated: the user name and password comes in the header
+	if p.StandAlone {
+		ws.Route(ws.POST(urlRoot + APIVersion + LoginPath).To(p.loginPost))
+	} else {
+		ws.Route(ws.GET(urlRoot + APIVersion + LoginPath).To(p.loginGet))
+	}
 	ws.Route(ws.POST(urlRoot + APIVersion + AuthPath).To(p.auth))
-	ws.Route(ws.POST(urlRoot + APIVersion + LogoutPath).To(p.logout))
+	ws.Route(ws.DELETE(urlRoot + APIVersion + LogoutPath).To(p.logout))
 	//wsContainer.Add(apiv1)
 	wsContainer.Add(ws)
 	return wsContainer

@@ -22,7 +22,7 @@ func main() {
 	if apiKey == "" {
 		glog.Fatal("MAUTH_API_KEY not found.")
 	}
-	sh := auth.NewServiceHandler(apiKey)
+	sh := auth.NewServiceHandler(apiKey, true)
 	httpHandler := sh.Register("")
 	http.Handle("/", httpHandler)
 

@@ -16,7 +16,7 @@ const (
 )
 
 func createModelHandler() *httptest.Server {
-	sh := NewServiceHandler(APIKey)
+	sh := NewServiceHandler(APIKey, true)
 	ts := sh.Register("")
 
 	return httptest.NewServer(ts)
