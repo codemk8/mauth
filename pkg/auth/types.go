@@ -11,6 +11,10 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
+type LoginResponse struct {
+	Token string `json:"token,omitempty"`
+}
+
 // AuthorizeRequest is the JSON payload format for /auth
 type AuthorizeRequest struct {
 	Token string `json:"token,omitempty"`
