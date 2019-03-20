@@ -1,6 +1,8 @@
 package token
 
 import (
+	"crypto/rsa"
+
 	"gopkg.in/square/go-jose.v2/jwt"
 )
 
@@ -10,12 +12,12 @@ type Verifier interface {
 }
 
 type joseVerifier struct {
-	secret string
+	pubKey *rsa.PublicKey
 }
 
-func NewVerifier(secret string) (Verifier, error) {
+func NewVerifier(pubKey *rsa.PublicKey) (Verifier, error) {
 
-	return &joseVerifier{secret: secret}, nil
+	return &joseVerifier{pubKey: pubKey}, nil
 }
 
 func (j *joseVerifier) Verify(token *string) (*jwt.Claims, error) {
@@ -24,6 +26,6 @@ func (j *joseVerifier) Verify(token *string) (*jwt.Claims, error) {
 		panic(err)
 	}
 	resultCl := jwt.Claims{}
-	err = parsedJWT.Claims(j.secret, &resultCl)
+	err = parsedJWT.Claims(j.pubKey, &resultCl)
 	return &resultCl, err
 }

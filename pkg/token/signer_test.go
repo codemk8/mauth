@@ -1,14 +1,16 @@
 package token
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
+
+	"gopkg.in/square/go-jose.v2/jwt"
 )
 
 func TestNewSigner(t *testing.T) {
 	type args struct {
-		filename string
+		privFile string
+		pubFile  string
 	}
 	tests := []struct {
 		name    string
@@ -18,37 +20,42 @@ func TestNewSigner(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 		{
-			name:    "test",
-			args:    args{"name"},
+			name: "test",
+			args: args{
+				privFile: "/tmp/rsa.priv",
+				pubFile:  "/tmp/rsa.pub",
+			},
 			want:    nil,
-			wantErr: true,
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewSigner(tt.args.filename)
+			priv, pub := GenerateRsaKeyPairIfNotExist(tt.args.privFile, tt.args.pubFile, false)
+			_, err := NewSigner(priv, pub)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewSigner() error = %v, wantErr %v", err, tt.wantErr)
 				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewSigner() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
 func TestSignerVerifier(t *testing.T) {
-	signer, err := NewSigner("mysecret")
+	priv, pub := GenerateRsaKeyPairIfNotExist("/tmp/rsa.priv", "/tmp/rsa.pub", false)
+	signer, err := NewSigner(priv, pub)
 	if err != nil {
 		panic(err)
 	}
-	verifier, err := NewVerifier("mysecret")
+	verifier, err := NewVerifier(pub)
 	if err != nil {
 		panic(err)
 	}
 
-	content := "details"
+	content := jwt.Claims{
+		Issuer:  "issuer1",
+		Subject: "subject1",
+		ID:      "id1"}
 	j, err := signer.Sign(&content)
 	if err != nil {
 		panic(err)
@@ -58,7 +65,7 @@ func TestSignerVerifier(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-
-	fmt.Printf("reproduced %v", *repContent)
-
+	if !reflect.DeepEqual(*repContent, content) {
+		t.Errorf("Claim not reproduced got = %v, want %v", repContent, content)
+	}
 }
