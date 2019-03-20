@@ -1,6 +1,7 @@
 package token
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -35,4 +36,29 @@ func TestNewSigner(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSignerVerifier(t *testing.T) {
+	signer, err := NewSigner("mysecret")
+	if err != nil {
+		panic(err)
+	}
+	verifier, err := NewVerifier("mysecret")
+	if err != nil {
+		panic(err)
+	}
+
+	content := "details"
+	j, err := signer.Sign(&content)
+	if err != nil {
+		panic(err)
+	}
+
+	repContent, err := verifier.Verify(j)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("reproduced %v", *repContent)
+
 }

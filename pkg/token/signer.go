@@ -42,5 +42,13 @@ func NewSigner(secret string) (Signer, error) {
 }
 
 func (j *joseSigner) Sign(token *string) (*string, error) {
-	return nil, nil
+	cl := jwt.Claims{
+		Subject: "subject",
+		Issuer:  "issuer",
+	}
+	raw, err := jwt.Signed(j.signer).Claims(cl).CompactSerialize()
+	if err != nil {
+		panic(err)
+	}
+	return &raw, nil
 }
